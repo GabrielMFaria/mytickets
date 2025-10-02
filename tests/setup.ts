@@ -1,4 +1,5 @@
 import prisma from "../src/database"; 
+import { cleanDatabase } from "./utils/cleanDatabase";
 
     beforeEach(async () => { 
         await prisma.ticket.deleteMany({}); 
@@ -8,3 +9,11 @@ import prisma from "../src/database";
     afterAll(async () => { 
         await prisma.$disconnect(); 
     });
+
+    beforeEach(async () => { 
+        await cleanDatabase(); 
+    });
+       
+    afterAll(async () => { 
+        await cleanDatabase();
+     });
