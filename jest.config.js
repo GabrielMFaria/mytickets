@@ -1,8 +1,22 @@
-module.exports = { 
-  preset: "ts-jest", 
-  testEnvironment: "node", 
-  testMatch: ["**/tests/**/*.test.ts"], 
-  moduleFileExtensions: ["ts", "js", "json"], 
-  clearMocks: true, 
-  setupFilesAfterEnv: ["<rootDir>/tests/setup.ts"],
+export default {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  transform: {
+    '^.+\\.tsx?$': ['ts-jest', { isolatedModules: true }],
+  },
+  moduleFileExtensions: ['ts', 'js', 'json'],
+  testMatch: ['**/tests/**/*.test.ts'],
+  clearMocks: true,
+  verbose: true,
+  collectCoverage: true,
+  coverageDirectory: 'coverage',
+  collectCoverageFrom: [
+    'src/**/*.ts',          
+    '!src/**/*.d.ts',       
+    '!src/**/index.ts',     
+    '!tests/setup.ts',      
+    '!tests/global.d.ts',
+    '!src/server.ts',   
+  ],
+  coverageReporters: ['text', 'lcov', 'html'],
 };

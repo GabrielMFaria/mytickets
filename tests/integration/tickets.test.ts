@@ -1,27 +1,53 @@
 import supertest from "supertest";
 import app from "../../src/index";
-import { createEvent, createTicket } from "../factories/ticketFactory";
+import prisma from "../../src/database";
+import { cleanDatabase } from "../utils/cleanDatabase";
+import { createEvent } from "../factories/eventFactory";
 
-const server = supertest(app);
+const api = supertest(app);
 
-describe("Tickets API", () => {
-  it("GET /tickets/:eventId → deve retornar tickets de um evento", async () => {
+beforeEach(async () => {
+  await cleanDatabase();
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
+});
+
+describe("Tickets integration tests", () => {
+  it("should create a new ticket", async () => {
     const event = await createEvent();
-    await createTicket(event.id);
 
-    const res = await server.get(`/tickets/${event.id}`);
+    const ticketData = {
+      code: crypto.randomUUID(), 
+      owner: "Gabriel",
+      eventId: event.id,
+    };
 
-    expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
+    const response = await api.post("/tickets").send(ticketData);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toHaveProperty("id");
+    expect(response.body.owner).toBe(ticketData.owner);
   });
 
-  it("POST /tickets → deve criar ticket", async () => {
+  it("should not allow duplicate ticket codes for same event", async () => {
     const event = await createEvent();
-    const body = { code: "ABC123", owner: "Gabriel", eventId: event.id };
 
-    const res = await server.post("/tickets").send(body);
+    const uniqueCode = crypto.randomUUID();
 
-    expect(res.status).toBe(201);
-    expect(res.body).toMatchObject(body);
+    await api.post("/tickets").send({
+      code: uniqueCode,
+      owner: "Gabriel",
+      eventId: event.id,
+    });
+
+    const response = await api.post("/tickets").send({
+      code: uniqueCode,
+      owner: "Lucas",
+      eventId: event.id,
+    });
+
+    expect(response.status).toBe(409);
   });
 });
